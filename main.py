@@ -39,7 +39,7 @@ except Exception:  # pragma: no cover
     PLUGIN_NAME,
     "若剑清",
     "她自己的今天：每天几件发生在她身上的小事，让她有自己的生活。",
-    "0.1.0",
+    "0.2.0",
     "",
 )
 class TodayPlugin(Star):
@@ -103,6 +103,7 @@ class TodayPlugin(Star):
             ("/reroll", self.api_reroll, ["POST"], "换一批"),
             ("/add", self.api_add, ["POST"], "加一件"),
             ("/said", self.api_said, ["POST"], "标记已提起"),
+            ("/pending", self.api_pending, ["POST"], "把挂着的事划掉"),
         ]
         for path, handler, methods, desc in routes:
             try:
@@ -136,6 +137,14 @@ class TodayPlugin(Star):
         self.store.mark_said(event_id)
         return {"ok": True, "state": self.store.snapshot()}
 
+    async def api_pending(self):
+        payload = await self._json_body()
+        item_id = str(payload.get("id") or "").strip()
+        if not item_id:
+            return {"ok": False, "error": "缺少 id"}
+        ok = self.store.done_pending(item_id)
+        return {"ok": ok, "state": self.store.snapshot()}
+
     # ---------------- 注入 ----------------
 
     @filter.on_llm_request()
@@ -155,12 +164,19 @@ class TodayPlugin(Star):
         if not item:
             return
 
-        slot = SLOT_LABEL.get(item.get("slot", ""), "")
+        slot_key = item.get("slot", "any")
+        slot = SLOT_LABEL.get(slot_key, "")
+        effect = str(item.get("effect") or "").strip()
         lines = [
             "【你今天的一件小事（你自己的日子，不是对方的事）】",
-            "%s%s" % (slot, item.get("text")),
-            "如果对方问起、或者话题正好合适，可以顺口提一句；不提也完全没关系，别硬塞。",
+            ("%s%s" % (slot, item.get("text"))) if slot_key in SLOT_LABEL else str(item.get("text") or ""),
         ]
+        if effect:
+            lines.append("这件事让你现在%s，说话会跟着变一点" % effect)
+        left = self.store.open_pending()
+        if left:
+            lines.append("另外你还有件事没做完：%s" % left.get("text"))
+        lines.append("如果对方问起、或者话题正好合适，可以顺口提一句；不提也完全没关系，别硬塞。")
         block = "\n".join(lines)
         try:
             parts = getattr(req, "extra_user_content_parts", None)

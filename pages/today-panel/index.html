@@ -6,145 +6,134 @@
 <title>她自己的今天</title>
 <style>
   :root{
-    --paper:#f6f1e6;
-    --sheet:#fdfbf6;
-    --ink:#2c2825;
-    --ink-soft:#6b6156;
-    --rule:#ddd2be;
-    --rule-soft:#ebe3d4;
-    --seal:#a8442e;
-    --moss:#4a6b57;
-    --shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 14px 34px -28px rgba(70,48,24,.5);
+    --bg:#eef3fa; --panel:#fff; --fg:#16202e; --muted:#6b7c93; --line:#dbe4f0; --field:#f6f9fe;
+    --accent:#2f6feb; --accent2:#63a4ff; --soft:#e8f0ff; --ok:#1f9d6b; --warn:#c2410c; --gold:#c08a3e;
+    --sh:0 1px 2px rgba(22,45,90,.06), 0 12px 28px -16px rgba(22,45,90,.22);
   }
   [data-theme="dark"]{
-    --paper:#14110e;
-    --sheet:#1b1713;
-    --ink:#e9e0d2;
-    --ink-soft:#a1958a;
-    --rule:#352c22;
-    --rule-soft:#2a231b;
-    --seal:#d0714f;
-    --moss:#7fae93;
-    --shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 16px 36px -28px rgba(0,0,0,.9);
+    --bg:#0b1119; --panel:#111a26; --fg:#e6eefb; --muted:#8ea2bd; --line:#1e2b3d; --field:#0f1722;
+    --accent:#64a0ff; --accent2:#3d7ce0; --soft:#14233a; --ok:#4ade80; --warn:#fb923c; --gold:#d8a866;
+    --sh:0 1px 2px rgba(0,0,0,.5), 0 16px 36px -22px rgba(0,0,0,.9);
   }
   *{box-sizing:border-box}
   [hidden]{display:none !important}
-  body{
-    margin:0;background:var(--paper);color:var(--ink);
-    font:15px/1.85 "Songti SC","STSong","SimSun",Georgia,serif;
-    -webkit-font-smoothing:antialiased;
-  }
-  .wrap{max-width:860px;margin:0 auto;padding:40px 24px 100px}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font:14px/1.65 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+  .wrap{max-width:1040px;margin:0 auto;padding:26px 20px 90px}
 
-  /* 页眉 */
-  .top{position:relative;padding-bottom:16px;border-bottom:2px solid var(--ink);margin-bottom:6px}
-  .top .kicker{font:11px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.32em;text-transform:uppercase;
-    color:var(--ink-soft)}
-  .top h1{margin:10px 0 2px;font-size:30px;font-weight:400;letter-spacing:.12em}
-  .top .meta{font:12px/1.6 "Helvetica Neue",Arial,sans-serif;color:var(--ink-soft);letter-spacing:.12em}
-  .top .wm{position:absolute;right:0;top:2px;font:64px/1 Georgia,serif;color:var(--seal);opacity:.09;
-    letter-spacing:-.02em;pointer-events:none}
+  .hero{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start;margin-bottom:16px}
+  .hero h1{margin:0 0 4px;font-size:21px}
+  .hero p{margin:0;color:var(--muted);font-size:13px}
+  .hero .sp{flex:1}
+  .btns{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{font-size:11.5px;padding:1px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+  .chip.kind{color:var(--accent);border-color:var(--accent);background:var(--soft)}
+  .chip.said{color:var(--ok);border-color:var(--ok)}
+  .chip.pending{color:var(--gold);border-color:var(--gold)}
 
-  .actions{display:flex;gap:18px;margin:16px 0 22px;font:12px/1 "Helvetica Neue",Arial,sans-serif;
-    letter-spacing:.14em}
-  .actions button{background:none;border:0;padding:0 0 4px;color:var(--ink-soft);cursor:pointer;
-    border-bottom:1px solid transparent;transition:.15s;letter-spacing:inherit;font:inherit}
-  .actions button:hover{color:var(--seal);border-bottom-color:var(--seal)}
-  .actions .push{margin-left:auto}
+  button{font:inherit;cursor:pointer;border-radius:10px;padding:8px 14px;border:1px solid var(--line);
+    background:var(--panel);color:var(--fg);transition:.15s;white-space:nowrap}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.mini{padding:5px 10px;font-size:12px;border-radius:8px}
+  button.ghost{background:transparent}
 
-  /* 正页 */
-  .sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:3px;box-shadow:var(--shadow);
-    padding:8px 26px;background-image:repeating-linear-gradient(transparent,transparent 34px,rgba(120,100,70,.05) 35px)}
+  .grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));margin-bottom:8px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--sh);
+    display:flex;flex-direction:column}
+  .card h3{margin:0 0 8px;font-size:15px;display:flex;gap:8px;align-items:flex-start}
+  .card .slot{font-size:12px;color:var(--muted);flex:none}
+  .card .txt{font-size:14.5px;line-height:1.7}
+  .card .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+  .card .foot{display:flex;gap:6px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
+  .card.said{opacity:.72}
 
-  .item{display:grid;grid-template-columns:52px 18px 1fr;gap:0 10px;padding:20px 0;
-    border-bottom:1px solid var(--rule-soft)}
-  .item:last-child{border-bottom:0}
-  .item .when{font:11px/2.4 "Helvetica Neue",Arial,sans-serif;color:var(--ink-soft);letter-spacing:.16em;
-    text-align:right}
-  .item .rail{position:relative}
-  .item .rail::before{content:"";position:absolute;left:8px;top:6px;bottom:-26px;width:1px;background:var(--rule-soft)}
-  .item:last-child .rail::before{display:none}
-  .item .dot{position:absolute;left:4px;top:8px;width:9px;height:9px;border-radius:50%;
-    border:1px solid var(--seal);background:var(--sheet)}
-  .item.done .dot{background:var(--seal)}
-  .item .txt{margin:0;font-size:16.5px;line-height:1.9;letter-spacing:.02em}
-  .item.done .txt{color:var(--ink-soft)}
-  .item .meta{margin-top:9px;display:flex;gap:12px;align-items:center;
-    font:11px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.14em;color:var(--ink-soft)}
-  .stamp{display:inline-block;padding:3px 7px;border:1px solid currentColor;border-radius:2px;
-    font-family:"Songti SC","SimSun",serif;letter-spacing:.22em;transform:rotate(-3deg);font-size:11px}
-  .stamp.said{color:var(--seal)}
-  .stamp.pending{color:var(--ink-soft);opacity:.8}
-  .item .mark{margin-left:auto;background:none;border:0;padding:0;cursor:pointer;color:var(--ink-soft);
-    font:11px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.14em;border-bottom:1px dotted var(--rule)}
-  .item .mark:hover{color:var(--seal);border-bottom-color:var(--seal)}
+  .sec{margin-top:22px}
+  .sec h3{margin:0 0 12px;font-size:13px;color:var(--muted);font-weight:600;letter-spacing:1.2px;
+    text-transform:uppercase;display:flex;align-items:center;gap:10px}
+  .sec h3::after{content:"";flex:1;height:1px;background:var(--line)}
 
-  /* 写一行 */
-  .addline{display:flex;gap:12px;align-items:flex-end;margin:20px 0 10px;padding:10px 0;
-    border-bottom:1px solid var(--rule)}
-  .addline input{flex:1;background:none;border:0;outline:none;color:var(--ink);
-    font:15px/1.8 "Songti SC",Georgia,serif;padding:2px 0}
-  .addline input::placeholder{color:var(--ink-soft);opacity:.7}
-  .addline button{background:none;border:0;color:var(--seal);cursor:pointer;
-    font:12px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.16em;padding-bottom:2px}
+  .pend{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh);
+    padding:6px 16px}
+  .prow{display:flex;gap:12px;align-items:center;padding:11px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+  .prow:last-child{border-bottom:0}
+  .prow .box{width:16px;height:16px;border-radius:5px;border:1px solid var(--line);flex:none;cursor:pointer;
+    display:grid;place-items:center;color:transparent;font-size:11px}
+  .prow .box.on{background:var(--ok);border-color:var(--ok);color:#fff}
+  .prow.done .txt{color:var(--muted);text-decoration:line-through}
+  .prow .txt{flex:1}
 
-  /* 七天账簿 */
-  .ledger{margin-top:34px}
-  .ledger h2{font:11px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.3em;text-transform:uppercase;
-    color:var(--ink-soft);margin:0 0 10px;display:flex;align-items:center;gap:14px}
-  .ledger h2::after{content:"";flex:1;height:1px;background:var(--rule)}
-  .row{display:grid;grid-template-columns:64px 1fr;gap:16px;padding:11px 0;border-bottom:1px dotted var(--rule);
-    font-size:14px}
-  .row:last-child{border-bottom:0}
-  .row .d{font:12px/1.9 "Helvetica Neue",Arial,sans-serif;color:var(--ink-soft);letter-spacing:.08em}
-  .row .t{color:var(--ink)}
-  .row .t i{font-style:normal;color:var(--ink-soft);opacity:.65}
+  .threads{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+  .th{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 16px;box-shadow:var(--sh)}
+  .th .top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .th b{font-size:13.5px}
+  .th .stage{font-size:12.5px;color:var(--muted);margin-top:6px}
+  .th .track{margin-top:10px;height:5px;border-radius:99px;background:var(--field);overflow:hidden}
+  .th .track i{display:block;height:100%;border-radius:99px;background:var(--accent2)}
 
-  .empty{padding:44px 0;text-align:center;color:var(--ink-soft);letter-spacing:.1em}
-  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(10px);
-    background:var(--sheet);border:1px solid var(--rule);padding:10px 18px;color:var(--ink);
-    box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.2s;
-    font:12px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.12em;z-index:80}
+  .hist{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh);
+    padding:6px 16px}
+  .hrow{display:flex;gap:14px;padding:10px 0;border-bottom:1px dashed var(--line);font-size:13px}
+  .hrow:last-child{border-bottom:0}
+  .hrow .d{flex:none;width:78px;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+  .hrow .t{flex:1;min-width:0;color:var(--fg)}
+  .hrow .t .dim{color:var(--muted);opacity:.75}
+
+  .addbox{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .addbox input{flex:1 1 260px;font:inherit;padding:9px 12px;border-radius:10px;border:1px solid var(--line);
+    background:var(--panel);color:var(--fg);outline:none}
+  .addbox input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--soft)}
+
+  .empty{color:var(--muted);font-size:13px;padding:26px 16px;text-align:center}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(10px);background:var(--panel);
+    border:1px solid var(--line);border-left:3px solid var(--accent);padding:10px 16px;border-radius:10px;
+    box-shadow:var(--sh);opacity:0;pointer-events:none;transition:.2s;font-size:13px;z-index:80}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  .banner{display:none;margin-bottom:16px;padding:10px 14px;border:1px solid var(--seal);color:var(--seal);
-    font:12px/1.6 "Helvetica Neue",Arial,sans-serif;letter-spacing:.1em}
+  .toast.error{border-left-color:var(--warn)}
+  .banner{display:none;margin-bottom:14px;padding:10px 14px;border-radius:10px;background:var(--soft);
+    color:var(--accent);font-size:13px}
   .banner.show{display:block}
-  @media(max-width:600px){
-    .wrap{padding:26px 16px 80px}
-    .item{grid-template-columns:44px 16px 1fr}
-    .top h1{font-size:24px}
-    .top .wm{font-size:48px}
-  }
+  @media(max-width:640px){.wrap{padding:18px 14px 80px}.grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top">
-    <div class="kicker">Her own day</div>
-    <h1>她自己的今天</h1>
-    <div class="meta" id="dateText">—</div>
-    <div class="wm" id="wm">—</div>
+  <div class="hero">
+    <div>
+      <h1>她自己的今天</h1>
+      <p>她自己的一天，不是围绕谁转的。工作日大多在学校，周末在家浇花画画。</p>
+    </div>
+    <div class="sp"></div>
+    <div class="btns">
+      <button class="primary" id="btn-reroll">换一批</button>
+      <button class="ghost" id="btn-add-toggle">＋ 添一件</button>
+      <button class="ghost" id="btn-refresh">刷新</button>
+    </div>
   </div>
 
   <div class="banner" id="banner">面板桥接还没就绪，正在重试…</div>
 
-  <div class="actions">
-    <button id="btn-reroll">换一批</button>
-    <button id="btn-add-toggle">添一件</button>
-    <button class="push" id="btn-refresh">刷新</button>
+  <div class="addbox" id="addbox" hidden>
+    <input id="add-input" placeholder="例：阳台的风很大，把晾着的衣服吹掉了" />
+    <button class="primary" id="btn-add-save">记下</button>
   </div>
 
-  <div class="addline" id="addbox" hidden>
-    <input id="add-input" placeholder="写下今天发生的另一件事…" />
-    <button id="btn-add-save">记下</button>
-  </div>
-
-  <div class="sheet" id="day"></div>
+  <div class="grid" id="grid"></div>
   <div class="empty" id="empty" hidden>今天还没有什么特别的事。</div>
 
-  <div class="ledger">
-    <h2>最近七天</h2>
-    <div id="hist"></div>
+  <div class="sec">
+    <h3>还挂着的事</h3>
+    <div class="pend" id="pend"></div>
+  </div>
+
+  <div class="sec">
+    <h3>跨天的长线</h3>
+    <div class="threads" id="threads"></div>
+  </div>
+
+  <div class="sec">
+    <h3>最近七天</h3>
+    <div class="hist" id="hist"></div>
   </div>
 </div>
 
@@ -192,33 +181,45 @@
 
   function render() {
     if (!state) return;
-    const date = state.date || "";
-    $("dateText").textContent = date + "　·　" + (state.slot_label || "");
-    $("wm").textContent = date.slice(8) || "";
-
     const events = state.events || [];
     $("empty").hidden = events.length > 0;
-    $("day").hidden = events.length === 0;
-    $("day").innerHTML = events.map((e) => {
+    $("grid").hidden = events.length === 0;
+    $("grid").innerHTML = events.map((e) => {
       const said = !!e.said;
-      return '<article class="item' + (said ? " done" : "") + '" data-id="' + esc(e.id) + '">'
-        + '<div class="when">' + esc(e.slot_label || "") + '</div>'
-        + '<div class="rail"><span class="dot"></span></div>'
-        + '<div class="content"><p class="txt">' + esc(e.text) + '</p>'
-        + '<div class="meta"><span class="stamp ' + (said ? "said" : "pending") + '">'
-        + (said ? "已提" : "未提") + '</span>'
-        + '<span>' + esc(e.kind || "life") + '</span>'
-        + (said ? "" : '<button class="mark" data-act="said">标记已提</button>')
-        + '</div></div></article>';
+      return '<div class="card' + (said ? " said" : "") + '" data-id="' + esc(e.id) + '">'
+        + '<h3><span>' + esc(e.text) + '</span></h3>'
+        + '<div class="meta"><span class="chip">' + esc(e.slot_label || "全天") + '</span>'
+        + (e.effect ? '<span class="chip">' + esc(e.effect) + '</span>' : '')
+        + '<span class="chip ' + (said ? "said" : "pending") + '">' + (said ? "提过了" : "还没提") + '</span>'
+        + '</div>'
+        + '<div class="foot">' + (said ? '' : '<button class="mini" data-act="said">标记已提</button>')
+        + '</div></div>';
+    }).join("");
+
+    const pending = state.pending || [];
+    $("pend").innerHTML = pending.length ? pending.map((p) =>
+      '<div class="prow' + (p.done ? " done" : "") + '" data-id="' + esc(p.id) + '">'
+      + '<span class="box' + (p.done ? " on" : "") + '" data-act="done">✓</span>'
+      + '<span class="txt">' + esc(p.text) + '</span>'
+      + (p.carried ? '<span class="chip">昨天起</span>' : '')
+      + '</div>').join("") : '<div class="empty">没有挂着的事</div>';
+
+    const threads = state.threads || [];
+    $("threads").innerHTML = threads.map((th) => {
+      const pct = th.total ? Math.round((th.index / th.total) * 100) : 0;
+      return '<div class="th"><div class="top"><b>' + esc(th.name) + '</b><span class="chip">'
+        + th.index + ' / ' + th.total + '</span></div>'
+        + '<div class="stage">' + esc(th.stage) + '</div>'
+        + '<div class="track"><i style="width:' + pct + '%"></i></div></div>';
     }).join("");
 
     const hist = (state.history || []).slice().reverse();
     $("hist").innerHTML = hist.length ? hist.map((d) => {
       const texts = (d.events || []).map((e) =>
-        e.said ? esc(e.text) : '<i>' + esc(e.text) + '</i>').join("　／　");
-      return '<div class="row"><span class="d">' + esc(d.date.slice(5).replace("-", ".")) + '</span>'
-        + '<span class="t">' + (texts || '<i>没有记录</i>') + '</span></div>';
-    }).join("") : '<div class="row"><span class="d">—</span><span class="t"><i>还没有历史</i></span></div>';
+        e.said ? esc(e.text) : '<span class="dim">' + esc(e.text) + '</span>').join("　／　");
+      return '<div class="hrow"><span class="d">' + esc(d.date.slice(5)) + '</span>'
+        + '<span class="t">' + (texts || '<span class="dim">没有记录</span>') + '</span></div>';
+    }).join("") : '<div class="empty">还没有历史</div>';
   }
 
   async function load() {
@@ -233,15 +234,24 @@
     }
   }
 
-  $("day").addEventListener("click", async (e) => {
+  $("grid").addEventListener("click", async (e) => {
     const btn = e.target.closest("button[data-act]");
     if (!btn || btn.dataset.act !== "said") return;
-    const card = btn.closest(".item");
-    const id = card && card.dataset.id;
+    const id = btn.closest(".card") && btn.closest(".card").dataset.id;
     if (!id) return;
     const res = await post("said", { id: id });
     if (res && res.ok) { state = Object.assign({ ok: true }, res.state || {}); render(); toast("已标记"); }
     else toast("标记失败", true);
+  });
+
+  $("pend").addEventListener("click", async (e) => {
+    const box = e.target.closest('[data-act="done"]');
+    if (!box) return;
+    const id = box.closest(".prow") && box.closest(".prow").dataset.id;
+    if (!id) return;
+    const res = await post("pending", { id: id });
+    if (res && res.ok) { state = Object.assign({ ok: true }, res.state || {}); render(); toast("划掉了"); }
+    else toast("操作失败", true);
   });
 
   $("btn-reroll").onclick = async () => {
