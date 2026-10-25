@@ -1,0 +1,21 @@
+name: astrbot_plugin_today
+display_name: 她自己的今天
+short_desc: 每天几件发生在她自己身上的小事
+desc: >
+  她自己的今天。每天按时间段抽一两件「发生在她身上的小事」，让她有自己的日子，
+  而不是所有话题都绕着对方转。有冷却和概率，只在自然的时候提一句，不提也没关系；
+  对方问「在干嘛」「今天怎么样」时必定想起来。自带手账风面板，可以换一批、添一件、标记已提。
+version: 0.1.0
+author: 若剑清
+repo: ""
+tags:
+  - life
+  - companion
+  - daily
+  - personality
+help: |
+  面板：插件管理 → 她自己的今天 → 今天
+  命令：/今天 看今天的事，/今天 换 换一批，/今天 加 一句话
+pages:
+  - name: today-panel
+    title: 今天

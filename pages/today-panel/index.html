@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>她自己的今天</title>
+<style>
+  :root{
+    --paper:#f6f1e6;
+    --sheet:#fdfbf6;
+    --ink:#2c2825;
+    --ink-soft:#6b6156;
+    --rule:#ddd2be;
+    --rule-soft:#ebe3d4;
+    --seal:#a8442e;
+    --moss:#4a6b57;
+    --shadow:0 1px 0 rgba(255,255,255,.9) inset, 0 14px 34px -28px rgba(70,48,24,.5);
+  }
+  [data-theme="dark"]{
+    --paper:#14110e;
+    --sheet:#1b1713;
+    --ink:#e9e0d2;
+    --ink-soft:#a1958a;
+    --rule:#352c22;
+    --rule-soft:#2a231b;
+    --seal:#d0714f;
+    --moss:#7fae93;
+    --shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 16px 36px -28px rgba(0,0,0,.9);
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  body{
+    margin:0;background:var(--paper);color:var(--ink);
+    font:15px/1.85 "Songti SC","STSong","SimSun",Georgia,serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:40px 24px 100px}
+
+  /* 页眉 */
+  .top{position:relative;padding-bottom:16px;border-bottom:2px solid var(--ink);margin-bottom:6px}
+  .top .kicker{font:11px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.32em;text-transform:uppercase;
+    color:var(--ink-soft)}
+  .top h1{margin:10px 0 2px;font-size:30px;font-weight:400;letter-spacing:.12em}
+  .top .meta{font:12px/1.6 "Helvetica Neue",Arial,sans-serif;color:var(--ink-soft);letter-spacing:.12em}
+  .top .wm{position:absolute;right:0;top:2px;font:64px/1 Georgia,serif;color:var(--seal);opacity:.09;
+    letter-spacing:-.02em;pointer-events:none}
+
+  .actions{display:flex;gap:18px;margin:16px 0 22px;font:12px/1 "Helvetica Neue",Arial,sans-serif;
+    letter-spacing:.14em}
+  .actions button{background:none;border:0;padding:0 0 4px;color:var(--ink-soft);cursor:pointer;
+    border-bottom:1px solid transparent;transition:.15s;letter-spacing:inherit;font:inherit}
+  .actions button:hover{color:var(--seal);border-bottom-color:var(--seal)}
+  .actions .push{margin-left:auto}
+
+  /* 正页 */
+  .sheet{background:var(--sheet);border:1px solid var(--rule);border-radius:3px;box-shadow:var(--shadow);
+    padding:8px 26px;background-image:repeating-linear-gradient(transparent,transparent 34px,rgba(120,100,70,.05) 35px)}
+
+  .item{display:grid;grid-template-columns:52px 18px 1fr;gap:0 10px;padding:20px 0;
+    border-bottom:1px solid var(--rule-soft)}
+  .item:last-child{border-bottom:0}
+  .item .when{font:11px/2.4 "Helvetica Neue",Arial,sans-serif;color:var(--ink-soft);letter-spacing:.16em;
+    text-align:right}
+  .item .rail{position:relative}
+  .item .rail::before{content:"";position:absolute;left:8px;top:6px;bottom:-26px;width:1px;background:var(--rule-soft)}
+  .item:last-child .rail::before{display:none}
+  .item .dot{position:absolute;left:4px;top:8px;width:9px;height:9px;border-radius:50%;
+    border:1px solid var(--seal);background:var(--sheet)}
+  .item.done .dot{background:var(--seal)}
+  .item .txt{margin:0;font-size:16.5px;line-height:1.9;letter-spacing:.02em}
+  .item.done .txt{color:var(--ink-soft)}
+  .item .meta{margin-top:9px;display:flex;gap:12px;align-items:center;
+    font:11px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.14em;color:var(--ink-soft)}
+  .stamp{display:inline-block;padding:3px 7px;border:1px solid currentColor;border-radius:2px;
+    font-family:"Songti SC","SimSun",serif;letter-spacing:.22em;transform:rotate(-3deg);font-size:11px}
+  .stamp.said{color:var(--seal)}
+  .stamp.pending{color:var(--ink-soft);opacity:.8}
+  .item .mark{margin-left:auto;background:none;border:0;padding:0;cursor:pointer;color:var(--ink-soft);
+    font:11px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.14em;border-bottom:1px dotted var(--rule)}
+  .item .mark:hover{color:var(--seal);border-bottom-color:var(--seal)}
+
+  /* 写一行 */
+  .addline{display:flex;gap:12px;align-items:flex-end;margin:20px 0 10px;padding:10px 0;
+    border-bottom:1px solid var(--rule)}
+  .addline input{flex:1;background:none;border:0;outline:none;color:var(--ink);
+    font:15px/1.8 "Songti SC",Georgia,serif;padding:2px 0}
+  .addline input::placeholder{color:var(--ink-soft);opacity:.7}
+  .addline button{background:none;border:0;color:var(--seal);cursor:pointer;
+    font:12px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.16em;padding-bottom:2px}
+
+  /* 七天账簿 */
+  .ledger{margin-top:34px}
+  .ledger h2{font:11px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.3em;text-transform:uppercase;
+    color:var(--ink-soft);margin:0 0 10px;display:flex;align-items:center;gap:14px}
+  .ledger h2::after{content:"";flex:1;height:1px;background:var(--rule)}
+  .row{display:grid;grid-template-columns:64px 1fr;gap:16px;padding:11px 0;border-bottom:1px dotted var(--rule);
+    font-size:14px}
+  .row:last-child{border-bottom:0}
+  .row .d{font:12px/1.9 "Helvetica Neue",Arial,sans-serif;color:var(--ink-soft);letter-spacing:.08em}
+  .row .t{color:var(--ink)}
+  .row .t i{font-style:normal;color:var(--ink-soft);opacity:.65}
+
+  .empty{padding:44px 0;text-align:center;color:var(--ink-soft);letter-spacing:.1em}
+  .toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(10px);
+    background:var(--sheet);border:1px solid var(--rule);padding:10px 18px;color:var(--ink);
+    box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.2s;
+    font:12px/1 "Helvetica Neue",Arial,sans-serif;letter-spacing:.12em;z-index:80}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .banner{display:none;margin-bottom:16px;padding:10px 14px;border:1px solid var(--seal);color:var(--seal);
+    font:12px/1.6 "Helvetica Neue",Arial,sans-serif;letter-spacing:.1em}
+  .banner.show{display:block}
+  @media(max-width:600px){
+    .wrap{padding:26px 16px 80px}
+    .item{grid-template-columns:44px 16px 1fr}
+    .top h1{font-size:24px}
+    .top .wm{font-size:48px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="kicker">Her own day</div>
+    <h1>她自己的今天</h1>
+    <div class="meta" id="dateText">—</div>
+    <div class="wm" id="wm">—</div>
+  </div>
+
+  <div class="banner" id="banner">面板桥接还没就绪，正在重试…</div>
+
+  <div class="actions">
+    <button id="btn-reroll">换一批</button>
+    <button id="btn-add-toggle">添一件</button>
+    <button class="push" id="btn-refresh">刷新</button>
+  </div>
+
+  <div class="addline" id="addbox" hidden>
+    <input id="add-input" placeholder="写下今天发生的另一件事…" />
+    <button id="btn-add-save">记下</button>
+  </div>
+
+  <div class="sheet" id="day"></div>
+  <div class="empty" id="empty" hidden>今天还没有什么特别的事。</div>
+
+  <div class="ledger">
+    <h2>最近七天</h2>
+    <div id="hist"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  const API = "/astrbot_plugin_today";
+  let bridge = null;
+  let state = null;
+
+  const $ = (id) => document.getElementById(id);
+  const ep = (p) => String(p || "").replace(/^\/+/, "");
+
+  async function ensureBridge() {
+    if (window.AstrBotPluginPage) { bridge = window.AstrBotPluginPage; return true; }
+    const t0 = Date.now();
+    while (Date.now() - t0 < 6000) {
+      await new Promise((r) => setTimeout(r, 60));
+      if (window.AstrBotPluginPage) { bridge = window.AstrBotPluginPage; return true; }
+    }
+    return false;
+  }
+  function get(path) {
+    if (bridge && bridge.apiGet) return bridge.apiGet(ep(path));
+    return fetch("/api/plug" + API + path, { credentials: "include" }).then((r) => r.json());
+  }
+  function post(path, body) {
+    if (bridge && bridge.apiPost) return bridge.apiPost(ep(path), body);
+    return fetch("/api/plug" + API + path, {
+      method: "POST", credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body || {})
+    }).then((r) => r.json());
+  }
+  function toast(msg, bad) {
+    const el = $("toast");
+    el.textContent = msg;
+    el.className = "toast show" + (bad ? " error" : "");
+    clearTimeout(toast.t);
+    toast.t = setTimeout(() => (el.className = "toast"), 2400);
+  }
+  const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+  function render() {
+    if (!state) return;
+    const date = state.date || "";
+    $("dateText").textContent = date + "　·　" + (state.slot_label || "");
+    $("wm").textContent = date.slice(8) || "";
+
+    const events = state.events || [];
+    $("empty").hidden = events.length > 0;
+    $("day").hidden = events.length === 0;
+    $("day").innerHTML = events.map((e) => {
+      const said = !!e.said;
+      return '<article class="item' + (said ? " done" : "") + '" data-id="' + esc(e.id) + '">'
+        + '<div class="when">' + esc(e.slot_label || "") + '</div>'
+        + '<div class="rail"><span class="dot"></span></div>'
+        + '<div class="content"><p class="txt">' + esc(e.text) + '</p>'
+        + '<div class="meta"><span class="stamp ' + (said ? "said" : "pending") + '">'
+        + (said ? "已提" : "未提") + '</span>'
+        + '<span>' + esc(e.kind || "life") + '</span>'
+        + (said ? "" : '<button class="mark" data-act="said">标记已提</button>')
+        + '</div></div></article>';
+    }).join("");
+
+    const hist = (state.history || []).slice().reverse();
+    $("hist").innerHTML = hist.length ? hist.map((d) => {
+      const texts = (d.events || []).map((e) =>
+        e.said ? esc(e.text) : '<i>' + esc(e.text) + '</i>').join("　／　");
+      return '<div class="row"><span class="d">' + esc(d.date.slice(5).replace("-", ".")) + '</span>'
+        + '<span class="t">' + (texts || '<i>没有记录</i>') + '</span></div>';
+    }).join("") : '<div class="row"><span class="d">—</span><span class="t"><i>还没有历史</i></span></div>';
+  }
+
+  async function load() {
+    try {
+      const data = await get("today");
+      if (!data || !data.ok) throw new Error("读取失败");
+      state = data;
+      render();
+    } catch (e) {
+      $("banner").classList.add("show");
+      $("banner").textContent = "加载失败：" + (e && e.message ? e.message : e);
+    }
+  }
+
+  $("day").addEventListener("click", async (e) => {
+    const btn = e.target.closest("button[data-act]");
+    if (!btn || btn.dataset.act !== "said") return;
+    const card = btn.closest(".item");
+    const id = card && card.dataset.id;
+    if (!id) return;
+    const res = await post("said", { id: id });
+    if (res && res.ok) { state = Object.assign({ ok: true }, res.state || {}); render(); toast("已标记"); }
+    else toast("标记失败", true);
+  });
+
+  $("btn-reroll").onclick = async () => {
+    if (!confirm("把今天这几件换掉？")) return;
+    const res = await post("reroll", {});
+    if (res && res.ok) { state = Object.assign({ ok: true }, res.state || {}); render(); toast("换好了"); }
+    else toast("换失败", true);
+  };
+
+  $("btn-add-toggle").onclick = () => {
+    $("addbox").hidden = !$("addbox").hidden;
+    if (!$("addbox").hidden) $("add-input").focus();
+  };
+
+  $("btn-add-save").onclick = async () => {
+    const text = $("add-input").value.trim();
+    if (!text) return toast("写点什么", true);
+    const res = await post("add", { text: text });
+    if (res && res.ok) {
+      $("add-input").value = "";
+      $("addbox").hidden = true;
+      state = Object.assign({ ok: true }, res.state || {});
+      render();
+      toast("记下了");
+    } else toast("添加失败", true);
+  };
+
+  $("add-input").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btn-add-save").click(); });
+  $("btn-refresh").onclick = load;
+
+  (async () => {
+    const ok = await ensureBridge();
+    if (!ok) $("banner").classList.add("show");
+    if (bridge && bridge.ready) {
+      try {
+        await bridge.ready();
+        const ctx = bridge.getContext && bridge.getContext();
+        if (ctx && typeof ctx.isDark === "boolean") {
+          document.documentElement.setAttribute("data-theme", ctx.isDark ? "dark" : "light");
+        }
+      } catch (e) {}
+    }
+    await load();
+  })();
+})();
+</script>
+</body>
+</html>
