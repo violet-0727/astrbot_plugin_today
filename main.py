@@ -21,13 +21,18 @@ from astrbot.api.star import Context, Star, register
 from astrbot.core.agent.message import TextPart
 from astrbot.core.utils.astrbot_path import get_astrbot_plugin_data_path
 
+from .settings import DEFAULTS, Settings
 from .state import SLOT_LABEL, TodayStore
 
 PLUGIN_NAME = "astrbot_plugin_today"
 API_PREFIX = f"/{PLUGIN_NAME}"
 
 # 被问起的时候必定想起来
-ASK_WORDS = ("在干嘛", "干嘛呢", "在做什么", "做什么呢", "忙什么", "今天怎么样", "今天过得", "今天干嘛", "今儿")
+ASK_WORDS = (
+    "在干嘛", "干嘛呢", "在做什么", "做什么呢", "忙什么", "在忙什么",
+    "今天怎么样", "今天过得", "今天干嘛", "今天做什么", "今天干什么", "今天做了",
+    "今儿", "今天有什么", "一天干嘛", "白天干嘛",
+)
 
 try:
     from quart import request
@@ -39,7 +44,7 @@ except Exception:  # pragma: no cover
     PLUGIN_NAME,
     "若剑清",
     "她自己的今天：每天几件发生在她身上的小事，让她有自己的生活。",
-    "0.2.0",
+    "0.4.0",
     "",
 )
 class TodayPlugin(Star):
@@ -47,7 +52,8 @@ class TodayPlugin(Star):
         super().__init__(context)
         self.config = config or {}
         data_dir = os.path.join(get_astrbot_plugin_data_path(), PLUGIN_NAME)
-        self.store = TodayStore(os.path.join(data_dir, "today.json"))
+        self.settings = Settings(os.path.join(data_dir, "settings.json"))
+        self.store = TodayStore(os.path.join(data_dir, "today.json"), self.settings.data)
 
         self.enabled = self._bool("enabled", True)
         self.inject_enabled = self._bool("inject_enabled", True)
@@ -104,6 +110,8 @@ class TodayPlugin(Star):
             ("/add", self.api_add, ["POST"], "加一件"),
             ("/said", self.api_said, ["POST"], "标记已提起"),
             ("/pending", self.api_pending, ["POST"], "把挂着的事划掉"),
+            ("/settings", self.api_settings, ["GET"], "读取参数"),
+            ("/settings/save", self.api_settings_save, ["POST"], "保存参数"),
         ]
         for path, handler, methods, desc in routes:
             try:
@@ -145,6 +153,15 @@ class TodayPlugin(Star):
         ok = self.store.done_pending(item_id)
         return {"ok": ok, "state": self.store.snapshot()}
 
+    async def api_settings(self):
+        return {"ok": True, "settings": self.settings.data, "defaults": DEFAULTS}
+
+    async def api_settings_save(self):
+        payload = await self._json_body()
+        data = self.settings.update(payload)
+        self.store.settings = data  # 让下一次生成就用新参数
+        return {"ok": True, "settings": data}
+
     # ---------------- 注入 ----------------
 
     @filter.on_llm_request()
@@ -156,20 +173,31 @@ class TodayPlugin(Star):
             return
 
         asked = any(word in text for word in ASK_WORDS)
+
+        if asked:
+            block = self._grounded_block()
+            try:
+                parts = getattr(req, "extra_user_content_parts", None)
+                if not isinstance(parts, list):
+                    parts = []
+                    req.extra_user_content_parts = parts
+                parts.append(TextPart(text=block).mark_as_temp())
+            except Exception as exc:
+                logger.debug("[Today] 注入失败: %s", exc)
+            return
+
         try:
-            item = self.store.due(self.probability, self.cooldown, force=asked)
+            item = self.store.due(self.probability, self.cooldown, force=False)
         except Exception as exc:
             logger.debug("[Today] 取事件失败: %s", exc)
             return
         if not item:
             return
 
-        slot_key = item.get("slot", "any")
-        slot = SLOT_LABEL.get(slot_key, "")
         effect = str(item.get("effect") or "").strip()
         lines = [
             "【你今天的一件小事（你自己的日子，不是对方的事）】",
-            ("%s%s" % (slot, item.get("text"))) if slot_key in SLOT_LABEL else str(item.get("text") or ""),
+            self._slot_text(item),
         ]
         if effect:
             lines.append("这件事让你现在%s，说话会跟着变一点" % effect)
@@ -187,6 +215,37 @@ class TodayPlugin(Star):
             self.store.mark_said(str(item.get("id")))
         except Exception as exc:
             logger.debug("[Today] 注入失败: %s", exc)
+
+    @staticmethod
+    def _slot_text(item: dict) -> str:
+        """时段前缀 + 正文；正文已经以时段开头就不再重复。"""
+        text = str(item.get("text") or "")
+        label = SLOT_LABEL.get(item.get("slot", "any"), "")
+        if not label or text.startswith(label):
+            return text
+        return label + text
+
+    def _grounded_block(self) -> str:
+        """被问今天时，把真实发生过的事全部交出来，并禁止编造。"""
+        lines = ["【今天你真正做过的事（只能从这里挑，不许编）】"]
+        events = self.store.events()
+        if events:
+            for item in events:
+                effect = str(item.get("effect") or "").strip()
+                line = "- " + self._slot_text(item)
+                if effect:
+                    line += "（当时%s）" % effect
+                lines.append(line)
+        else:
+            lines.append("- 今天还没什么特别的，大多在发呆、写作业或者在阳台待着")
+        left = self.store.open_pending()
+        if left:
+            lines.append("还挂着一件没做完的：%s" % left.get("text"))
+        lines.append(
+            "对方问的是你今天在干嘛。只能从上面这些里挑一两件说，"
+            "没有的不要补，细节不要编；实在都不合适就说记不太清了。"
+        )
+        return "\n".join(lines)
 
     # ---------------- 命令 ----------------
 

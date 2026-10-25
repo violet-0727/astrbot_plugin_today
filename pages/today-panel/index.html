@@ -48,6 +48,37 @@
   .card .foot{display:flex;gap:6px;margin-top:12px;padding-top:10px;border-top:1px dashed var(--line)}
   .card.said{opacity:.72}
 
+  .tabs{display:flex;gap:6px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:5px;margin-bottom:16px;width:fit-content;box-shadow:var(--sh)}
+  .tab{border:0;background:transparent;color:var(--muted);padding:8px 20px;border-radius:9px;
+    font:inherit;cursor:pointer;transition:.15s}
+  .tab:hover{color:var(--fg)}
+  .tab.on{background:var(--accent);color:#fff;box-shadow:0 4px 12px -6px var(--accent)}
+  .tone{margin-bottom:14px;font-size:13px;color:var(--muted)}
+  .tone b{color:var(--fg);font-weight:600}
+
+  .panel-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--sh);
+    padding:16px 18px;margin-bottom:14px}
+  .panel-card h4{margin:0 0 4px;font-size:14px}
+  .panel-card .hint{margin:0 0 14px;font-size:12px;color:var(--muted)}
+  .srow{display:grid;grid-template-columns:1fr 170px;gap:14px;align-items:center;padding:10px 0;
+    border-bottom:1px dashed var(--line)}
+  .srow:last-child{border-bottom:0}
+  .srow .l b{font-size:13px}
+  .srow .l span{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+  .srow input[type=number]{width:100%;padding:8px 10px;border-radius:9px;border:1px solid var(--line);
+    background:var(--field);color:var(--fg);font:inherit;text-align:right;outline:none}
+  .srow input[type=range]{width:100%}
+  .srow .val{font-size:12px;color:var(--muted);text-align:right;margin-top:4px}
+  .switch{display:flex;justify-content:flex-end;align-items:center;gap:8px}
+  .switch input{appearance:none;width:42px;height:24px;border-radius:999px;background:var(--line);
+    position:relative;cursor:pointer;transition:.18s}
+  .switch input:checked{background:var(--accent)}
+  .switch input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;
+    background:#fff;transition:.18s}
+  .switch input:checked::after{left:21px}
+  .switch span{font-size:12px;color:var(--muted);min-width:24px}
+  .savebar{display:flex;gap:10px;align-items:center;margin-top:6px}
   .sec{margin-top:22px}
   .sec h3{margin:0 0 12px;font-size:13px;color:var(--muted);font-weight:600;letter-spacing:1.2px;
     text-transform:uppercase;display:flex;align-items:center;gap:10px}
@@ -113,27 +144,97 @@
 
   <div class="banner" id="banner">面板桥接还没就绪，正在重试…</div>
 
-  <div class="addbox" id="addbox" hidden>
-    <input id="add-input" placeholder="例：阳台的风很大，把晾着的衣服吹掉了" />
-    <button class="primary" id="btn-add-save">记下</button>
+  <div class="tabs" id="pagetabs">
+    <button class="tab on" data-page="today">今天</button>
+    <button class="tab" data-page="settings">设置</button>
   </div>
 
-  <div class="grid" id="grid"></div>
-  <div class="empty" id="empty" hidden>今天还没有什么特别的事。</div>
+  <div id="page-today">
+    <div class="tone" id="tone"></div>
 
-  <div class="sec">
-    <h3>还挂着的事</h3>
-    <div class="pend" id="pend"></div>
+    <div class="addbox" id="addbox" hidden>
+      <input id="add-input" placeholder="例：阳台的风很大，把晾着的衣服吹掉了" />
+      <button class="primary" id="btn-add-save">记下</button>
+    </div>
+
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" hidden>今天还没有什么特别的事。</div>
+
+    <div class="sec">
+      <h3>还挂着的事</h3>
+      <div class="pend" id="pend"></div>
+    </div>
+
+    <div class="sec">
+      <h3>跨天的长线</h3>
+      <div class="threads" id="threads"></div>
+    </div>
+
+    <div class="sec">
+      <h3>最近七天</h3>
+      <div class="hist" id="hist"></div>
+    </div>
   </div>
 
-  <div class="sec">
-    <h3>跨天的长线</h3>
-    <div class="threads" id="threads"></div>
-  </div>
+  <div id="page-settings" hidden>
+    <div class="panel-card">
+      <h4>一天的密度</h4>
+      <p class="hint">每天最多几件事。改了之后影响下一次生成（当天已生成的不会变，可以点「换一批」）。</p>
+      <div class="srow">
+        <div class="l"><b>每天最多几件</b><span>1 ~ 8，太多会像流水账</span></div>
+        <div><input type="number" id="s-max" min="1" max="8" step="1" /></div>
+      </div>
+    </div>
 
-  <div class="sec">
-    <h3>最近七天</h3>
-    <div class="hist" id="hist"></div>
+    <div class="panel-card">
+      <h4>意外</h4>
+      <p class="hint">日常里偶尔出点岔子，才不像排好的日程表。</p>
+      <div class="srow">
+        <div class="l"><b>意外概率</b><span>每天出现一次小意外的概率</span></div>
+        <div>
+          <input type="range" id="s-accident" min="0" max="0.3" step="0.01" />
+          <div class="val" id="s-accident-v"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <h4>今天是什么日子</h4>
+      <p class="hint">偶尔一整天都顺，或者一整天都背——这是最像人的部分。</p>
+      <div class="srow">
+        <div class="l"><b>启用</b><span>关掉就每天都是平常的一天</span></div>
+        <div class="switch"><label><input type="checkbox" id="s-tone" /><span id="s-tone-t">开</span></label></div>
+      </div>
+      <div class="srow">
+        <div class="l"><b>挺顺的一天</b><span>心情好，事件偏正向</span></div>
+        <div>
+          <input type="range" id="s-lucky" min="0" max="0.15" step="0.005" />
+          <div class="val" id="s-lucky-v"></div>
+        </div>
+      </div>
+      <div class="srow">
+        <div class="l"><b>不太顺的一天</b><span>连着小倒霉，还会多挂一件事</span></div>
+        <div>
+          <input type="range" id="s-unlucky" min="0" max="0.15" step="0.005" />
+          <div class="val" id="s-unlucky-v"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-card">
+      <h4>抽签方式</h4>
+      <p class="hint">按稀有度抽，常见的事出现得多，少见的事偶尔才来。</p>
+      <div class="srow">
+        <div class="l"><b>按稀有度</b><span>关掉就是所有事件等概率</span></div>
+        <div class="switch"><label><input type="checkbox" id="s-weighted" /><span id="s-weighted-t">开</span></label></div>
+      </div>
+    </div>
+
+    <div class="savebar">
+      <button class="primary" id="btn-save-settings">保存</button>
+      <button class="ghost" id="btn-reset-settings">恢复默认</button>
+      <span class="hint" id="save-note" style="margin:0"></span>
+    </div>
   </div>
 </div>
 
@@ -181,6 +282,9 @@
 
   function render() {
     if (!state) return;
+    const tone = state.tone_label || "平常的一天";
+    $("tone").innerHTML = "今天是 <b>" + esc(tone) + "</b>　·　" + (state.kind_label || "");
+
     const events = state.events || [];
     $("empty").hidden = events.length > 0;
     $("grid").hidden = events.length === 0;
@@ -281,6 +385,75 @@
 
   $("add-input").addEventListener("keydown", (e) => { if (e.key === "Enter") $("btn-add-save").click(); });
   $("btn-refresh").onclick = load;
+
+  document.querySelectorAll("#pagetabs .tab").forEach((tab) => {
+    tab.onclick = () => {
+      document.querySelectorAll("#pagetabs .tab").forEach((x) => x.classList.toggle("on", x === tab));
+      const which = tab.dataset.page;
+      $("page-today").hidden = which !== "today";
+      $("page-settings").hidden = which !== "settings";
+      if (which === "settings") loadSettings(); else load();
+    };
+  });
+
+  function setRange(id, value, digits) {
+    $(id).value = value;
+    $(id + "-v").textContent = digits ? Number(value).toFixed(digits) : String(value);
+  }
+
+  function renderSettings(s) {
+    s = s || {};
+    $("s-max").value = s.max_events;
+    setRange("s-accident", s.accident_probability, 2);
+    $("s-tone").checked = !!s.day_tone_enabled;
+    $("s-tone-t").textContent = s.day_tone_enabled ? "开" : "关";
+    setRange("s-lucky", s.lucky_probability, 3);
+    setRange("s-unlucky", s.unlucky_probability, 3);
+    $("s-weighted").checked = !!s.weighted;
+    $("s-weighted-t").textContent = s.weighted ? "开" : "关";
+  }
+
+  async function loadSettings() {
+    try {
+      const data = await get("settings");
+      if (!data || !data.ok) throw new Error("读取失败");
+      renderSettings(data.settings);
+    } catch (e) { toast("读取设置失败", true); }
+  }
+
+  $("btn-save-settings").onclick = async () => {
+    const payload = {
+      max_events: Number($("s-max").value || 4),
+      accident_probability: Number($("s-accident").value || 0),
+      day_tone_enabled: $("s-tone").checked,
+      lucky_probability: Number($("s-lucky").value || 0),
+      unlucky_probability: Number($("s-unlucky").value || 0),
+      weighted: $("s-weighted").checked
+    };
+    try {
+      const res = await post("settings/save", payload);
+      if (!res || !res.ok) throw new Error("保存失败");
+      renderSettings(res.settings);
+      $("save-note").textContent = "已保存 · " + new Date().toLocaleTimeString();
+      toast("设置已保存");
+    } catch (e) { toast(e.message || "保存失败", true); }
+  };
+
+  $("btn-reset-settings").onclick = async () => {
+    if (!confirm("恢复默认设置？")) return;
+    const res = await post("settings/save", {
+      max_events: 4, accident_probability: 0.08, day_tone_enabled: true,
+      lucky_probability: 0.03, unlucky_probability: 0.01, weighted: true
+    });
+    if (res && res.ok) { renderSettings(res.settings); toast("已恢复默认"); }
+    else toast("恢复失败", true);
+  };
+
+  ["s-accident", "s-lucky", "s-unlucky"].forEach((id) => {
+    $(id).oninput = () => setRange(id, $(id).value, id === "s-accident" ? 2 : 3);
+  });
+  $("s-tone").onchange = () => ($("s-tone-t").textContent = $("s-tone").checked ? "开" : "关");
+  $("s-weighted").onchange = () => ($("s-weighted-t").textContent = $("s-weighted").checked ? "开" : "关");
 
   (async () => {
     const ok = await ensureBridge();

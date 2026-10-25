@@ -146,8 +146,56 @@ POOLS: list[dict] = [
     {"day": "any", "slot": "night", "text": "在床上躺着，脑子里在想一些没用的", "effect": "有点放空"},
 ]
 
+ACCIDENTS: list[dict] = [
+    {"text": "水杯在书包里翻了，作业本湿了一半", "effect": "有点烦"},
+    {"text": "公交坐过站，多走了十几分钟", "effect": "有点累"},
+    {"text": "被老师点起来回答问题，卡了半天", "effect": "有点窘"},
+    {"text": "下雨没带伞，一路跑到楼道里躲", "effect": "有点狼狈"},
+    {"text": "手机快没电，一整天都不敢乱看", "effect": "有点憋"},
+    {"text": "笔袋落在教室，晚上写作业到处找笔", "effect": "有点急"},
+    {"text": "阳台的花盆被风刮倒了，土撒了一地", "effect": "有点心疼", "pending": "还得重新把土装回去"},
+    {"text": "走在路上被溅了一裤脚的水", "effect": "有点无语"},
+]
+
+LUCKY: list[dict] = [
+    {"text": "今天运气不错，路上捡到一枚硬币", "effect": "心情不错"},
+    {"text": "刚好赶上要等很久的那班车", "effect": "有点松快"},
+    {"text": "想吃的那个窗口今天没排队", "effect": "心情不错"},
+    {"text": "阳台的月季今天特别精神", "effect": "很安静"},
+]
+
+UNLUCKY: list[dict] = [
+    {"text": "今天有点背：早上起晚，一整天都在赶", "effect": "有点累"},
+    {"text": "作业本忘在学校，晚上只能借别人的看", "effect": "有点懊恼", "pending": "明天得早点去补"},
+    {"text": "一整天都有人找事，安静不下来", "effect": "有点烦"},
+]
+
 MAX_DAYS = 14
 MAX_EVENTS = 4
+
+
+def _weight(item: dict) -> float:
+    try:
+        return float(item.get("weight", 10))
+    except Exception:
+        return 10.0
+
+
+def _pick(pool: list[dict], count: int, weighted: bool = True) -> list[dict]:
+    """按权重抽，不重复；weighted=False 时等概率。"""
+    pool = [p for p in pool]
+    out: list[dict] = []
+    for _ in range(count):
+        if not pool:
+            break
+        if weighted:
+            weights = [_weight(p) for p in pool]
+            item = random.choices(pool, weights=weights, k=1)[0]
+        else:
+            item = random.choice(pool)
+        pool.remove(item)
+        out.append(item)
+    return out
 
 
 def slot_of(now: float | None = None) -> str:
@@ -173,8 +221,9 @@ def day_key(now: float | None = None) -> str:
 
 
 class TodayStore:
-    def __init__(self, path: str) -> None:
+    def __init__(self, path: str, settings: dict | None = None) -> None:
         self.path = path
+        self.settings = dict(settings or {})
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
         self.data: dict = {"days": {}, "threads": {}}
         self.load()
@@ -280,25 +329,68 @@ class TodayStore:
 
         kind = day_kind(now)
         current = SLOTS.index(slot_of(now))
+        try:
+            max_events = max(1, min(int(self.settings.get("max_events", MAX_EVENTS)), 8))
+        except Exception:
+            max_events = MAX_EVENTS
+        weighted = bool(self.settings.get("weighted", True))
         events: list[dict] = []
 
+        # 1) 跨天长线
         events.extend(self._advance_threads(now))
 
+        # 2) 今天是什么日子
+        tone = "normal"
+        if self.settings.get("day_tone_enabled", True):
+            roll = random.random()
+            unlucky = float(self.settings.get("unlucky_probability", 0.01))
+            lucky = float(self.settings.get("lucky_probability", 0.03))
+            if roll < unlucky:
+                tone = "unlucky"
+            elif roll < unlucky + lucky:
+                tone = "lucky"
+        day["tone"] = tone
+
+        def slot_ok(item: dict) -> bool:
+            slot = item.get("slot", "any")
+            return slot == "any" or SLOTS.index(slot) <= current
+
+        def push(item: dict, kind_tag: str = "") -> None:
+            if len(events) >= max_events:
+                return
+            if any(e["text"] == item["text"] for e in events):
+                return
+            events.append(
+                {
+                    "text": item["text"],
+                    "kind": kind_tag or item.get("kind", "life"),
+                    "effect": item.get("effect", ""),
+                    "slot": item.get("slot", "any"),
+                }
+            )
+
+        # 3) 情绪特别的一天：先放一件
+        if tone == "unlucky":
+            push(random.choice(UNLUCKY), "tone")
+            day["pending"].append(
+                {
+                    "id": "%d" % int(now * 1000) + "u",
+                    "text": "今天不太顺，晚饭后想早点躺下",
+                    "done": False,
+                    "carried": False,
+                }
+            )
+        elif tone == "lucky":
+            push(random.choice(LUCKY), "tone")
+
+        # 4) 事件链
         chains = [c for c in CHAINS if c["day"] in (kind, "any")]
         if chains:
             chain = random.choice(chains)
             for step in chain["steps"]:
-                slot = step.get("slot", "any")
-                if slot != "any" and SLOTS.index(slot) > current:
+                if not slot_ok(step):
                     continue
-                events.append(
-                    {
-                        "text": step["text"],
-                        "kind": "chain",
-                        "effect": step.get("effect", ""),
-                        "slot": slot,
-                    }
-                )
+                push(step, "chain")
                 if step.get("pending"):
                     day["pending"].append(
                         {
@@ -309,25 +401,37 @@ class TodayStore:
                         }
                     )
 
-        pool = [p for p in POOLS if p["day"] in (kind, "any")]
-        random.shuffle(pool)
-        for item in pool:
-            if len(events) >= MAX_EVENTS:
-                break
-            slot = item.get("slot", "any")
-            if slot != "any" and SLOTS.index(slot) > current:
-                continue
-            if any(e["text"] == item["text"] for e in events):
-                continue
-            events.append(
-                {
-                    "text": item["text"],
-                    "kind": item.get("kind", "life"),
-                    "effect": item.get("effect", ""),
-                    "slot": slot,
-                }
-            )
+        # 5) 意外（可关、可调概率）
+        try:
+            accident_p = float(self.settings.get("accident_probability", 0.08))
+        except Exception:
+            accident_p = 0.08
+        if accident_p > 0 and random.random() < accident_p:
+            accident = random.choice(ACCIDENTS)
+            if len(events) >= max_events:
+                events.pop()  # 顶掉一件，别让一天堆太多
+            push(accident, "accident")
+            if accident.get("pending"):
+                day["pending"].append(
+                    {
+                        "id": "%d" % int(now * 1000) + "a",
+                        "text": accident["pending"],
+                        "done": False,
+                        "carried": False,
+                    }
+                )
 
+        # 6) 剩下的用单件补满
+        pool = [p for p in POOLS if p["day"] in (kind, "any") and slot_ok(p)]
+        while len(events) < max_events and pool:
+            item = _pick(pool, 1, weighted)
+            if not item:
+                break
+            item = item[0]
+            pool.remove(item)
+            push(item)
+
+        # 7) 昨天的未完，今天还挂着
         y = self._yesterday(now)
         if y:
             for item in y.get("pending") or []:
@@ -347,7 +451,7 @@ class TodayStore:
             item["said"] = False
             item["said_at"] = 0
 
-        day["events"] = events[:MAX_EVENTS]
+        day["events"] = events[:max_events]
         day["created_at"] = now
         day["kind"] = kind
         self.save()
@@ -479,6 +583,12 @@ class TodayStore:
             "date": day_key(),
             "kind": day.get("kind", ""),
             "kind_label": "周末" if day.get("kind") == "weekend" else "工作日",
+            "tone": day.get("tone", "normal"),
+            "tone_label": {
+                "lucky": "今天挺顺",
+                "unlucky": "今天不太顺",
+                "normal": "平常的一天",
+            }.get(day.get("tone", "normal"), "平常的一天"),
             "slot": slot_of(),
             "slot_label": SLOT_LABEL.get(slot_of(), ""),
             "events": [
